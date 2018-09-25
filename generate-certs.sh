@@ -5,6 +5,7 @@ CONTROLLER_IP=$(getent ahostsv4 $CONTROLLER_NAME|tail -1|awk '{print $1}')
 SERVICE_IP="10.254.0.1"
 
 mkdir -p etc/kubernetes/pki
+mkdir -p etc/etcd/pki
 cd etc/kubernetes/pki
 
 echo "Generate openssl.cnf"
@@ -45,6 +46,8 @@ IP.2 = ${SERVICE_IP}
 DNS.1 = ${CONTROLLER_NAME}
 IP.1 = ${CONTROLLER_IP}
 EOF
+
+cp openssl.cnf ../../etcd/pki/
 
 echo "Generate Kubernetes CA cert"
 openssl ecparam -name secp521r1 -genkey -noout -out ca.key
@@ -129,6 +132,8 @@ openssl req -x509 -new -sha256 -nodes -key etcd-ca.key -days 3650 \
             -out etcd-ca.crt -subj "/CN=etcd-ca" -extensions v3_ca \
             -config ./openssl.cnf
 
+cp etcd-ca.crt etcd-ca.key ../../etcd/pki/
+
 echo "Generate etcd cert"
 openssl ecparam -name secp521r1 -genkey -noout -out etcd.key
 chmod 0600 etcd.key
@@ -137,6 +142,8 @@ openssl req -new -sha256 -key etcd.key -subj "/CN=etcd" \
                  -CAcreateserial -out etcd.crt -days 365 \
                  -extensions v3_req_etcd -extfile ./openssl.cnf
 
+cp etcd.key etcd.crt ../../etcd/pki/
+
 echo "Generate etcd peer cert"
 openssl ecparam -name secp521r1 -genkey -noout -out etcd-peer.key
 chmod 0600 etcd-peer.key
@@ -144,6 +151,8 @@ openssl req -new -sha256 -key etcd-peer.key -subj "/CN=etcd-peer" \
   | openssl x509 -req -sha256 -CA etcd-ca.crt -CAkey etcd-ca.key \
                  -CAcreateserial -out etcd-peer.crt -days 365 \
                  -extensions v3_req_etcd -extfile ./openssl.cnf
+
+cp etcd-peer.key etcd-peer.crt ../../etcd/pki/
 
 echo "View certs"
 for i in *crt; do

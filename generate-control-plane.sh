@@ -20,7 +20,9 @@ ETCD_PEER_KEY_FILE=/${ETCD_PKI_DIR}/etcd-peer.key
 ETCD_CA_FILE=/${ETCD_PKI_DIR}/ca.crt
 ETCD_PEER_CA_FILE=/${ETCD_PKI_DIR}/ca.crt
 
-SA_ACCOUNT_KEY_FILE=/${KUBE_PKI_DIR}/sa.pub
+
+SA_ACCOUNT_KEY_FILE=/${KUBE_PKI_DIR}/sa.key
+SA_ACCOUNT_PUB_FILE=/${KUBE_PKI_DIR}/sa.pub
 KUBE_API_SERVER_SECURE_PORT=6443
 
 KUBE_CA_CERT_FILE=/${KUBE_PKI_DIR}/ca.crt
@@ -59,7 +61,7 @@ KUBE_ETCD_SERVERS="--etcd-servers=https://${INTERNAL_IP}:2379 --etcd-cafile=${ET
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=${SERVICE_CLUSTER_IP_RANGE} --service-node-port-range=${SERVICE_CLUSTER_PORT_RANGE}"
 
 # default admission control policies
-KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds --service-account-key-file=${SA_ACCOUNT_KEY_FILE} --authorization-mode=RBAC"
+KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds --service-account-key-file=${SA_ACCOUNT_PUB_FILE} --authorization-mode=RBAC"
 
 # Add your own!
 KUBE_API_ARGS="--client-ca-file=${KUBE_CA_CERT_FILE} --tls-cert-file=${KUBE_APISERVER_CERT_FILE} --tls-private-key-file=${KUBE_APISERVER_KEY_FILE} --experimental-bootstrap-token-auth=true --kubelet-client-certificate=${KUBELET_CLIENT_CERT_FILE} --kubelet-client-key=${KUBELET_CLIENT_KEY_FILE} --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname --requestheader-client-ca-file=${FRONT_PROXY_CERT_FILE} --requestheader-username-headers=X-Remote-User --requestheader-group-headers=X-Remote-Group --requestheader-allowed-names=front-proxy-client --requestheader-extra-headers-prefix=X-Remote-Extra-"
@@ -69,8 +71,6 @@ EOF
 else
     echo "Skip  ${KUBE_DIR}/apiserver"
 fi
-
-exit 0
 
 if [ ! -f ${KUBE_DIR}/config ]; then
     echo "Generate ${KUBE_DIR}/config"
@@ -97,10 +97,45 @@ KUBE_LOG_LEVEL="--v=2"
 KUBE_ALLOW_PRIV="--allow-privileged=true"
 
 # How the controller-manager, scheduler, and proxy find the apiserver
-KUBE_MASTER="--master=https://${KUBERNETES_PUBLIC_ADDRESS}:${KUBE_API_SERVER_SECURE_PORT}"
+# KUBE_MASTER="--master=https://${KUBERNETES_PUBLIC_ADDRESS}:${KUBE_API_SERVER_SECURE_PORT}"
+# Not used here, server is configured in *.kubeconfig files
+KUBE_MASTER=
 
 EOF
 else
     echo "Skip  ${KUBE_DIR}/config"
 fi
 
+if [ ! -f ${KUBE_DIR}/controller-manager ]; then
+    echo "Generate ${KUBE_DIR}/controller-manager"
+
+    cat >${KUBE_DIR}/controller-manager <<EOF
+###
+# The following values are used to configure the kubernetes controller-manager
+
+# defaults from config and apiserver should be adequate
+
+# Add your own!
+KUBE_CONTROLLER_MANAGER_ARGS="--kubeconfig=/${KUBE_DIR}/controller-manager.kubeconfig --address=127.0.0.1 --leader-elect=true --controllers=*,bootstrapsigner,tokencleaner --service-account-private-key-file=${SA_ACCOUNT_KEY_FILE} --insecure-experimental-approve-all-kubelet-csrs-for-group=system:bootstrappers --cluster-cidr=${CLUSTER_CIDR} --cluster-name=${CLUSTER_NAME} --service-cluster-ip-range=${SERVICE_CLUSTER_IP_RANGE} --cluster-signing-cert-file=${KUBE_CA_CERT_FILE} --cluster-signing-key-file=${KUBE_CA_KEY_FILE} --root-ca-file=${KUBE_CA_CERT_FILE} --use-service-account-credentials=true"
+
+EOF
+else
+    echo "Skip  ${KUBE_DIR}/controller-manager"
+fi
+
+if [ ! -f ${KUBE_DIR}/scheduler ]; then
+    echo "Generate ${KUBE_DIR}/scheduler"
+
+    cat >${KUBE_DIR}/scheduler <<EOF
+###
+# kubernetes scheduler config
+
+# default config should be adequate
+
+# Add your own!
+KUBE_SCHEDULER_ARGS="--leader-elect=true --kubeconfig=/${KUBE_DIR}/scheduler.kubeconfig --address=127.0.0.1"
+
+EOF
+else
+    echo "Skip  ${KUBE_DIR}/scheduler"
+fi

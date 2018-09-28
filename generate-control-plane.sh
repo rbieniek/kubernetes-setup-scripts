@@ -13,13 +13,9 @@ KUBE_PKI_DIR=${KUBE_DIR}/pki
 ETCD_DIR=etc/etcd
 ETCD_PKI_DIR=${ETCD_DIR}/pki
 
-ETCD_CERT_FILE=/${ETCD_PKI_DIR}/etcd.crt
-ETCD_CERT_KEY_FILE=/${ETCD_PKI_DIR}/etcd.key
-ETCD_PEER_CERT_FILE=/${ETCD_PKI_DIR}/etcd-peer.crt
-ETCD_PEER_KEY_FILE=/${ETCD_PKI_DIR}/etcd-peer.key
-ETCD_CA_FILE=/${ETCD_PKI_DIR}/ca.crt
-ETCD_PEER_CA_FILE=/${ETCD_PKI_DIR}/ca.crt
-
+ETCD_CERT_FILE=/${KUBE_PKI_DIR}/etcd.crt
+ETCD_CERT_KEY_FILE=/${KUBE_PKI_DIR}/etcd.key
+ETCD_CA_FILE=/${KUBE_PKI_DIR}/etcd-ca.crt
 
 SA_ACCOUNT_KEY_FILE=/${KUBE_PKI_DIR}/sa.key
 SA_ACCOUNT_PUB_FILE=/${KUBE_PKI_DIR}/sa.pub
@@ -55,16 +51,16 @@ KUBE_API_PORT="--secure-port=${KUBE_API_SERVER_SECURE_PORT} --insecure-port=0"
 # KUBELET_PORT="--kubelet-port=10250"
 
 # Comma separated list of nodes in the etcd cluster
-KUBE_ETCD_SERVERS="--etcd-servers=https://${INTERNAL_IP}:2379 --etcd-cafile=${ETCD_PEER_CA_FILE} --etcd-certfile=${ETCD_CERT_FILE} --etcd-keyfile=${ETCD_CERT_KEY_FILE}"
+KUBE_ETCD_SERVERS="--etcd-servers=https://${INTERNAL_IP}:2379 --etcd-cafile=${ETCD_CA_FILE} --etcd-certfile=${ETCD_CERT_FILE} --etcd-keyfile=${ETCD_CERT_KEY_FILE}"
 
 # Address range to use for services
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=${SERVICE_CLUSTER_IP_RANGE} --service-node-port-range=${SERVICE_CLUSTER_PORT_RANGE}"
 
 # default admission control policies
-KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds --service-account-key-file=${SA_ACCOUNT_PUB_FILE} --authorization-mode=RBAC"
+KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds,NodeRestriction  --service-account-key-file=${SA_ACCOUNT_KEY_FILE} --authorization-mode=Node,RBAC"
 
 # Add your own!
-KUBE_API_ARGS="--client-ca-file=${KUBE_CA_CERT_FILE} --tls-cert-file=${KUBE_APISERVER_CERT_FILE} --tls-private-key-file=${KUBE_APISERVER_KEY_FILE} --experimental-bootstrap-token-auth=true --kubelet-client-certificate=${KUBELET_CLIENT_CERT_FILE} --kubelet-client-key=${KUBELET_CLIENT_KEY_FILE} --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname --requestheader-client-ca-file=${FRONT_PROXY_CERT_FILE} --requestheader-username-headers=X-Remote-User --requestheader-group-headers=X-Remote-Group --requestheader-allowed-names=front-proxy-client --requestheader-extra-headers-prefix=X-Remote-Extra-"
+KUBE_API_ARGS="--client-ca-file=${KUBE_CA_CERT_FILE} --tls-cert-file=${KUBE_APISERVER_CERT_FILE} --tls-private-key-file=${KUBE_APISERVER_KEY_FILE} --enable-bootstrap-token-auth=true --kubelet-client-certificate=${KUBELET_CLIENT_CERT_FILE} --kubelet-client-key=${KUBELET_CLIENT_KEY_FILE} --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname --requestheader-client-ca-file=${FRONT_PROXY_CERT_FILE} --requestheader-username-headers=X-Remote-User --requestheader-group-headers=X-Remote-Group --requestheader-allowed-names=front-proxy-client --requestheader-extra-headers-prefix=X-Remote-Extra-"
 
 EOF
 

@@ -177,6 +177,7 @@ if [ ! -f ${ETCD_PKI_DIR}/ca.key ]; then
     openssl req -x509 -new -sha256 -nodes -key  ${ETCD_PKI_DIR}/ca.key -days 3650 \
             -out  ${ETCD_PKI_DIR}/ca.crt -subj "/CN=ca" -extensions v3_ca \
             -config  ${ETCD_PKI_DIR}/openssl.cnf
+    cp ${ETCD_PKI_DIR}/ca.crt ${ETCD_PKI_DIR}/etcd-ca.crt ${KUBE_PKI_DIR}
 else
     echo "Skip etcd CA cert"
 fi

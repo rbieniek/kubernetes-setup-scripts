@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CONTROLLER_NAME=`hostname`
+CONTROLLER_NAME=`hostname -s`
 CONTROLLER_IP=$(getent ahostsv4 $CONTROLLER_NAME|tail -1|awk '{print $1}')
 INTERNAL_IP=$(hostname -I | awk '{print $1}')
 KUBERNETES_PUBLIC_ADDRESS=$INTERNAL_IP

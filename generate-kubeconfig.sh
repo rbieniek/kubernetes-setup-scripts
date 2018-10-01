@@ -101,3 +101,28 @@ if [ ! -f ${ADMIN_KCONFIG} ]; then
 else
     echo "Skip ${ADMIN_KCONFIG}"
 fi
+
+BOOTSTRAP_KCONFIG=${KUBE_DIR}/bootstrap.kubeconfig
+BOOTSTRAP_KUSER="kubelet-bootstrap"
+
+mkdir -p ${KUBE_DIR}
+
+if [ ! -f ${BOOTSTRAP_KCONFIG} ]; then
+    echo "Generate $BOOTSTRAP_KCONFIG"
+    
+    kubectl config set-cluster ${CLUSTER_NAME} \
+	    --certificate-authority=${KUBE_PKI_DIR}/ca.crt \
+	    --embed-certs=true \
+	    --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6443 \
+	    --kubeconfig=${BOOTSTRAP_KCONFIG}
+
+    kubectl config set-context ${BOOTSTRAP_KUSER}@${CLUSTER_NAME} \
+	    --cluster=${CLUSTER_NAME} \
+	    --user=${BOOTSTRAP_KUSER} \
+	    --kubeconfig=${BOOTSTRAP_KCONFIG}
+
+    kubectl config use-context ${BOOTSTRAP_KUSER}@${CLUSTER_NAME} --kubeconfig=${BOOTSTRAP_KCONFIG}
+    kubectl config view --kubeconfig=${BOOTSTRAP_KCONFIG}
+else
+    echo "Skip $BOOTSTRAP_KCONFIG"    
+fi

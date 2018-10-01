@@ -7,8 +7,6 @@ KUBERNETES_PUBLIC_ADDRESS=$INTERNAL_IP
 SERVICE_CLUSTER_IP_RANGE="10.254.0.0/12"
 CLUSTER_CIDR="10.254.0.0/16"
 SERVICE_CLUSTER_PORT_RANGE=30000-32767
-CLUSTER_DNS_IP="10.254.0.10"
-KUBELET_PORT=10250
 
 KUBE_DIR=etc/kubernetes
 KUBE_PKI_DIR=${KUBE_DIR}/pki
@@ -31,9 +29,6 @@ KUBELET_CLIENT_CERT_FILE=/${KUBE_PKI_DIR}/apiserver-kubelet-client.crt
 KUBELET_CLIENT_KEY_FILE=/${KUBE_PKI_DIR}/apiserver-kubelet-client.key
 FRONT_PROXY_CERT_FILE=/${KUBE_PKI_DIR}/front-proxy-ca.crt
 FRONT_PROXY_KEY_FILE=/${KUBE_PKI_DIR}/front-proxy-ca.key
-
-mkdir -p ${KUBE_DIR}/manifests
-mkdir -p ${KUBE_DIR}/client-pki
 
 if [ ! -f ${KUBE_DIR}/apiserver ]; then
     echo "Generate ${KUBE_DIR}/apiserver"
@@ -140,28 +135,3 @@ EOF
 else
     echo "Skip  ${KUBE_DIR}/scheduler"
 fi
-
-if [ ! -f ${KUBE_DIR}/kubelet ]; then
-    echo "Generate ${KUBE_DIR}/kubelet"
-
-    cat >${KUBE_DIR}/kubelet <<EOF
-###
-# kubernetes kubelet (minion) config
-
-# The address for the info server to serve on (set to 0.0.0.0 or "" for all interfaces)
-KUBELET_ADDRESS="--address=${INTERNAL_IP}"
-
-# The port for the info server to serve on
-KUBELET_PORT="--port=${KUBELET_PORT}"
-
-# You may leave this blank to use the actual hostname
-KUBELET_HOSTNAME="--hostname-override=${CONTROLLER_NAME}"
-
-# Add your own!
-KUBELET_ARGS="--bootstrap-kubeconfig=/${KUBE_DIR}/bootstrap.kubeconfig --kubeconfig=/${KUBE_DIR}/kubelet.conf --require-kubeconfig=true --pod-manifest-path=/${KUBE_DIR}/manifests --allow-privileged=true --network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/usr/libexec/cni --cluster-dns=${CLUSTER_DNS_IP} -cluster-domain=cluster.local --authorization-mode=Webhook --client-ca-file=/${KUBE_PKI_DIR}/ca.crt  --cgroup-driver=systemd --cert-dir=/${KUBE_DIR}/client-pki --fail-swap-on=false"
-
-EOF
-else
-    echo "Skip  ${KUBE_DIR}/kubelet"
-fi
-

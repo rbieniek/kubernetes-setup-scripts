@@ -284,3 +284,23 @@ $ KUBECONFIG=etc/kubernetes/admin.kubeconfig kubectl certificate approve <CSR_ID
 *Unless you perform the CSR approval script, the kubelet instance will not be able to talk to
 the cluster and will not show up as a node*
 
+### Generate kube-proxy configuration
+To generate the *kube-proxy* configuration, issue the command
+```
+$ sh generate-proxy-kubeconfig.sh
+```
+
+which generates the *etc/kubernetes/kube-proxy.kubeconfig* configuration file
+
+### Deploy kube-proxy configuration
+To deploy the *kube-proxy* configuration, issue the commands
+```
+$ sudo cp etc/kubernetes/kube-proxy.kubeconfig /etc/kubernetes
+$ sudo chown kube:kube /etc/kubernetes/kube-proxy.kubeconfig
+```
+
+and to start up the *kube-proxy* and make it permanent, issuse the commands:
+```
+$ sudo systemctl start kube-proxy
+$ sudo systemctl enable kube-proxy
+```

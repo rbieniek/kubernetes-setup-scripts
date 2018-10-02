@@ -123,6 +123,8 @@ if [ ! -f ${BOOTSTRAP_KCONFIG} ]; then
 
     kubectl config use-context ${BOOTSTRAP_KUSER}@${CLUSTER_NAME} --kubeconfig=${BOOTSTRAP_KCONFIG}
     kubectl config view --kubeconfig=${BOOTSTRAP_KCONFIG}
+
+    chmod 600 ${BOOTSTRAP_KCONFIG}
 else
     echo "Skip $BOOTSTRAP_KCONFIG"    
 fi

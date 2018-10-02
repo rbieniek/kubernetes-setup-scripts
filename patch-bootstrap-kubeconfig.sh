@@ -21,7 +21,7 @@ if [ ! -f ${BOOTSTRAP_TOKEN_FILE} ]; then
     exit 1
 fi
 
-BOOTSTRAP_TOKEN=`cat ${BOOTSTRAP_TOKEN}`
+BOOTSTRAP_TOKEN=`cat ${BOOTSTRAP_TOKEN_FILE}`
 
 if [ ! -f ${BOOTSTRAP_KCONFIG} ]; then
     echo "Generate $BOOTSTRAP_KCONFIG first"

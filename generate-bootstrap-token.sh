@@ -15,6 +15,8 @@ if [ ! -f ${BOOTSTRAP_TOKEN_FILE} ]; then
     BOOTSTRAP_TOKEN="${TOKEN_PUB}.${TOKEN_SECRET}"
 
     echo -n >${BOOTSTRAP_TOKEN_FILE} ${BOOTSTRAP_TOKEN}
+
+    export KUBECONFIG=${KUBE_DIR}/admin.kubeconfig
     
     kubectl -n kube-system create secret generic bootstrap-token-${TOKEN_PUB} \
         --type 'bootstrap.kubernetes.io/token' \
@@ -25,6 +27,8 @@ if [ ! -f ${BOOTSTRAP_TOKEN_FILE} ]; then
         --from-literal usage-bootstrap-signing=true
 
     kubectl -n kube-system get secret/bootstrap-token-${TOKEN_PUB} -o yaml
+
+    chmod 600 ${BOOTSTRAP_TOKEN_FILE}
 else
     echo "Skipping generate ${BOOTSTRAP_TOKEN_FILE}"    
 fi

@@ -161,3 +161,67 @@ scheduler            Healthy   ok
 controller-manager   Healthy   ok                   
 etcd-0               Healthy   {"health": "true"}   
 ```
+## Create bootstrap token
+Generate the kubelet worker node bootstrap token by issuing the command
+```
+$ sh generate-bootstrap-token.sh
+```
+
+The generated token is stored in the file *etc*kubernetes/bootstrap.token* for later reference
+
+The output of the above script will yield an output similar to this
+```
+Generate etc/kubernetes/bootstrap.token
+secret "bootstrap-token-4728f3" created
+apiVersion: v1
+data:
+  description: Y2x1c3RlciBib290c3RyYXAgdG9rZW4=
+  token-id: NDcyOGYz
+  token-secret: OThlNzI3NjE1ODcwN2IxOQ==
+  usage-bootstrap-authentication: dHJ1ZQ==
+  usage-bootstrap-signing: dHJ1ZQ==
+kind: Secret
+metadata:
+  creationTimestamp: 2018-10-01T23:23:39Z
+  name: bootstrap-token-4728f3
+  namespace: kube-system
+  resourceVersion: "650"
+  selfLink: /api/v1/namespaces/kube-system/secrets/bootstrap-token-4728f3
+  uid: 071bab35-c5d1-11e8-b637-000c297293f2
+type: bootstrap.kubernetes.io/token
+```
+to show the generated token value in the kubernetes cluster
+
+
+## Expose CA and bootstrap kubeconfig via configmap
+** Make sure that only the fresh generated *bootstrap.kubeconfig* is used for this step**
+
+To distribute the CA and the bootstrap kubeconfig through a configmap, execute the following script
+```
+$ sh  expose-bootstrap-configmap.sh
+```
+
+It will produce an output similar to this
+```
+configmap "cluster-info" created
+role.rbac.authorization.k8s.io "system:bootstrap-signer-clusterinfo" created
+rolebinding.rbac.authorization.k8s.io "kubeadm:bootstrap-signer-clusterinfo" created
+clusterrolebinding.rbac.authorization.k8s.io "kubeadm:kubelet-bootstrap" created
+```
+
+to show the created configmap name and cluster roles.
+
+## Patch the generated bootstrap configuration with token
+To patch the generated *etc/kubernetes/bootstrap.kubeconfig* file with the generated bootstrap token,
+iusse the command
+```
+$ sh patch-bootstrap-kubeconfig.sh
+```
+
+## Deploy bootstrap kubeconfig
+Deploy the generated *etc/kubernetes/bootstrap.kubeconfig* file by executing
+```
+$ sudo cp etc/kubernetes/bootstrap.* /etc/kubernetes
+$ sudo chown kube:kube /etc/kubernetes/bootstrap.*
+```
+

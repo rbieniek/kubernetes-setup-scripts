@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CONTROLLER_NAME=`hostname`
+CONTROLLER_NAME=`hostname -s`
 CONTROLLER_IP=$(getent ahostsv4 $CONTROLLER_NAME|tail -1|awk '{print $1}')
 INTERNAL_IP=$(hostname -I | awk '{print $1}')
 KUBERNETES_PUBLIC_ADDRESS=$INTERNAL_IP
@@ -149,19 +149,35 @@ if [ ! -f ${KUBE_DIR}/kubelet ]; then
 # kubernetes kubelet (minion) config
 
 # The address for the info server to serve on (set to 0.0.0.0 or "" for all interfaces)
-KUBELET_ADDRESS="--address=${INTERNAL_IP}"
+# KUBELET_ADDRESS="--address=${INTERNAL_IP}"
 
 # The port for the info server to serve on
-KUBELET_PORT="--port=${KUBELET_PORT}"
+# KUBELET_PORT="--port=${KUBELET_PORT}"
 
 # You may leave this blank to use the actual hostname
 KUBELET_HOSTNAME="--hostname-override=${CONTROLLER_NAME}"
 
 # Add your own!
-KUBELET_ARGS="--bootstrap-kubeconfig=/${KUBE_DIR}/bootstrap.kubeconfig --kubeconfig=/${KUBE_DIR}/kubelet.conf --require-kubeconfig=true --pod-manifest-path=/${KUBE_DIR}/manifests --allow-privileged=true --network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/usr/libexec/cni --cluster-dns=${CLUSTER_DNS_IP} -cluster-domain=cluster.local --authorization-mode=Webhook --client-ca-file=/${KUBE_PKI_DIR}/ca.crt  --cgroup-driver=systemd --cert-dir=/${KUBE_DIR}/client-pki --fail-swap-on=false"
+KUBELET_ARGS="--bootstrap-kubeconfig=/${KUBE_DIR}/bootstrap.kubeconfig --kubeconfig=/${KUBE_DIR}/kubelet.conf --pod-manifest-path=/${KUBE_DIR}/manifests --allow-privileged=true --network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/usr/libexec/cni --cluster-dns=${CLUSTER_DNS_IP} --cluster-domain=cluster.local --authorization-mode=Webhook --client-ca-file=/${KUBE_PKI_DIR}/ca.crt  --cgroup-driver=systemd --cert-dir=/${KUBE_DIR}/client-pki --hostname-override=${CONTROLLER_NAME} --fail-swap-on=false"
 
 EOF
 else
     echo "Skip  ${KUBE_DIR}/kubelet"
+fi
+
+if [ ! -f ${KUBE_DIR}/proxy ]; then
+    echo "Generate ${KUBE_DIR}/proxy"
+
+    cat >${KUBE_DIR}/proxy <<EOF
+###
+# kubernetes proxy config
+
+# default config should be adequate
+
+# Add your own!
+KUBE_PROXY_ARGS="--kubeconfig=/${KUBE_DIR}/kube-proxy.kubeconfig --hostname-override=${CONTROLLER_NAME} --cluster-cidr=${CLUSTER_CIDR}"
+EOF
+else
+    echo "Skip  ${KUBE_DIR}/proxy"
 fi
 

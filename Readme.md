@@ -33,6 +33,33 @@ sh generate-sysctl-conf.sh
 The generated configuration file enables IP forwading as well as IPv4 and IPV6 bridge
 netfiltr support.
 
+## Generate docker configuration
+It is necessary to have a special docker daemoin configuration applied.
+
+The *etc/docker/daemon.json* configuration file is generated using
+```
+sh generate-docker-conf.sh 
+```
+
+The generated configuration file changes the cgroup implementation used by docker to the same
+implementation which Kubernetes expects
+
+## Generate CNI network configuration
+This step depends on the overall deployment scenario
+
+### Generate intra-host bridge configuration
+This step creates a simple intra-host bridge network configuration which enables inter-pod
+communication on the same host
+
+To generate the configuration, execute
+```
+$ sh generate-hostnet-conf.sh
+```
+
+This will generate the configuration files
+- etc/cni/net.d/10-hostnet.conf
+- etc/cni/net.d/99-loopback.conf
+
 ## Generate certificates
 The script generates a custom CA used for encrypting and protecting cluster communications.
 
@@ -224,4 +251,36 @@ Deploy the generated *etc/kubernetes/bootstrap.kubeconfig* file by executing
 $ sudo cp etc/kubernetes/bootstrap.* /etc/kubernetes
 $ sudo chown kube:kube /etc/kubernetes/bootstrap.*
 ```
+
+## Start kubelet on worker node
+Start *kubelet* and
+make them start during boot time by executing
+```
+$ sudo systemctl start kubelet
+$ sudo systemctl enable kubelet
+```
+
+Due to the bootstrap token mechanism in use, the *kubelet* process issues a Certificate Signing
+Request (CSR) which needs to be granted by an admin
+
+To show the pending CSRs, issue the command
+```
+$ KUBECONFIG=etc/kubernetes/admin.kubeconfig kubectl get csr
+```
+ which shows pending CSRs like shown in this example
+ ```
+$ KUBECONFIG=etc/kubernetes/admin.kubeconfig kubectl get csr
+NAME                                                   AGE       REQUESTOR                 CONDITION
+node-csr-HkQl_grsnXU4BQJSEOZSRgcJR3Ca6xY7QuM4WJhGLBg   7h        system:bootstrap:4728f3   Pending
+node-csr-svrUifwkErdnO_mjL36v0eiKhAVktHDNwDtcD_J88SM   7h        system:bootstrap:4728f3   Pending
+node-csr-xClI1TUU8HIgA2a45TNJmPrVxPNoMvgnsE8qYiHYjfg   7h        system:bootstrap:4728f3   Pending
+```
+
+To grant a CSR, execute issue the following command
+```
+$ KUBECONFIG=etc/kubernetes/admin.kubeconfig kubectl certificate approve <CSR_ID>
+```
+
+*Unless you perform the CSR approval script, the kubelet instance will not be able to talk to
+the cluster and will not show up as a node*
 

@@ -158,7 +158,7 @@ if [ ! -f ${KUBE_DIR}/kubelet ]; then
 KUBELET_HOSTNAME="--hostname-override=${CONTROLLER_NAME}"
 
 # Add your own!
-KUBELET_ARGS="--bootstrap-kubeconfig=/${KUBE_DIR}/bootstrap.kubeconfig --kubeconfig=/${KUBE_DIR}/kubelet.conf --pod-manifest-path=/${KUBE_DIR}/manifests --allow-privileged=true --network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/usr/libexec/cni --cluster-dns=${CLUSTER_DNS_IP} --cluster-domain=cluster.local --authorization-mode=Webhook --client-ca-file=/${KUBE_PKI_DIR}/ca.crt  --cgroup-driver=systemd --cert-dir=/${KUBE_DIR}/client-pki --hostname-override=${CONTROLLER_NAME} --fail-swap-on=false"
+KUBELET_ARGS="--bootstrap-kubeconfig=/${KUBE_DIR}/bootstrap.kubeconfig --kubeconfig=/${KUBE_DIR}/kubelet.conf --pod-manifest-path=/${KUBE_DIR}/manifests --allow-privileged=true --network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/usr/libexec/cni --cluster-dns=${CLUSTER_DNS_IP} --cluster-domain=cluster.local --authorization-mode=Webhook --client-ca-file=/${KUBE_PKI_DIR}/ca.crt --cert-dir=/${KUBE_DIR}/client-pki --hostname-override=${CONTROLLER_NAME} --fail-swap-on=false"
 
 EOF
 else
